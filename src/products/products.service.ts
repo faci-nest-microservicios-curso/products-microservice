@@ -1,8 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { HttpStatus, Injectable } from '@nestjs/common';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { PrismaService } from '../prisma.service';
 import { PaginationDto } from '../common/dto';
+import { RpcException } from '@nestjs/microservices';
 
 @Injectable()
 export class ProductsService {
@@ -10,7 +11,7 @@ export class ProductsService {
   // Si es true, el borrado es lógico (soft delete); si es false, es físico.
   private readonly softDelete = true;
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   async create(createProductDto: CreateProductDto) {
     const product = await this.prisma.product.create({ data: createProductDto });
@@ -48,14 +49,19 @@ export class ProductsService {
     });
 
     if (!product) {
-      throw new NotFoundException(`Producto #${id} no encontrado`);
+      throw new RpcException(
+        {
+          message: `product_${id}_not_found`,
+          status: HttpStatus.NOT_FOUND,
+        }
+      );
     }
 
     return product;
   }
 
   async update(id: number, updateProductDto: UpdateProductDto) {
-    const {id:__, ...data} = updateProductDto
+    const { id: __, ...data } = updateProductDto
     await this.findOne(id);
 
     const product = await this.prisma.product.update({
