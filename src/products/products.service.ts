@@ -8,7 +8,6 @@ import { RpcException } from '@nestjs/microservices';
 @Injectable()
 export class ProductsService {
 
-  // Si es true, el borrado es lógico (soft delete); si es false, es físico.
   private readonly softDelete = true;
 
   constructor(private readonly prisma: PrismaService) { }
@@ -95,5 +94,26 @@ export class ProductsService {
       method: 'physical',
       id,
     };
+  }
+
+  async validateProducts(ids: number[]) {
+    ids = Array.from<number>( new Set<number>())
+
+    const products = await this.prisma.product.findMany({
+      where: {
+        id: {
+          in: ids
+        }
+      }
+    })
+
+    if(products.length !== ids.length) {
+      throw new RpcException({
+        message: 'some_products_not_found',
+        status: HttpStatus.BAD_REQUEST,  
+      })
+    }
+
+    return products;
   }
 }
