@@ -10,7 +10,8 @@
     "deploy": "nest deploy",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
-    "start:dev": "nest start --watch",
+    "start:dev": "npm run docker:start && nest start --watch",
+    "docker:start": "prisma migrate dev && prisma generate",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "oxlint src/ test/",
@@ -21,6 +22,7 @@
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
   "dependencies": {
+    "@nats-io/transport-node": "^3.4.0",
     "@nestjs/class-validator": "^0.13.4",
     "@nestjs/common": "^12.0.1",
     "@nestjs/core": "^12.0.1",
