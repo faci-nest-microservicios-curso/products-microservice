@@ -13,6 +13,9 @@ RUN npm install
 # Builder - Construye la aplicación
 FROM node:24-alpine3.24 as build
 
+# Prisma 5.10 no detecta OpenSSL en Alpine 3.24 sin el binario `openssl`.
+RUN apk add --no-cache openssl
+
 WORKDIR /usr/src/app
 
 # Copiar de deps, los módulos de node
@@ -35,6 +38,10 @@ RUN npm prune --omit=dev && npm cache clean --force
 # Crear la imagen final de Docker
 FROM node:24-alpine3.24 as prod
 
+# Prisma necesita `openssl` también en runtime para detectar el target
+# linux-musl-openssl-3.0.x (si no, busca el engine `linux-musl` y falla).
+RUN apk add --no-cache openssl
+
 WORKDIR /usr/src/app
 
 COPY --from=build /usr/src/app/node_modules ./node_modules
@@ -42,6 +49,9 @@ COPY --from=build /usr/src/app/node_modules ./node_modules
 # Copiar la carpeta de DIST
 COPY --from=build /usr/src/app/dist ./dist
 COPY --from=build /usr/src/app/prisma ./prisma
+
+# El contenedor corre como `node` y SQLite necesita escribir la BD y el journal.
+RUN chown -R node:node /usr/src/app/prisma
 
 
 ENV NODE_ENV=production

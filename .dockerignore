@@ -2,5 +2,6 @@ dist/
 node_modules/
 .env
 .vscode/
-prisma/*.db
+# prisma/.dev.db se incluye a propósito: el compose de producción usa SQLite
+# y espera la BD sembrada dentro de la imagen.
 prisma/*.db-journal
